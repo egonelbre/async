@@ -7,8 +7,7 @@ import (
 	"github.com/egonelbre/async"
 )
 
-func ExampleAll() {
-	fmt.Println("=== succeeding case ===")
+func ExampleAll_Success() {
 	result := async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
@@ -26,8 +25,9 @@ func ExampleAll() {
 	case <-result.Done:
 		fmt.Printf("Success\n")
 	}
+}
 
-	fmt.Println("=== failing case ===")
+func ExampleAll_Failing() {
 	result = async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
@@ -45,8 +45,9 @@ func ExampleAll() {
 	case <-result.Done:
 		fmt.Printf("Success\n")
 	}
+}
 
-	fmt.Println("=== handling all errors ===")
+func ExampleAll_HandleAllErrors() {
 	result = async.All(
 		func() error {
 			return fmt.Errorf("SPLASH")
