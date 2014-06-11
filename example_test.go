@@ -7,7 +7,7 @@ import (
 	"github.com/egonelbre/async"
 )
 
-func ExampleAll_Success() {
+func ExampleAll_success() {
 	result := async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
@@ -27,7 +27,7 @@ func ExampleAll_Success() {
 	}
 }
 
-func ExampleAll_Failing() {
+func ExampleAll_failing() {
 	result = async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
@@ -47,7 +47,7 @@ func ExampleAll_Failing() {
 	}
 }
 
-func ExampleAll_HandleAllErrors() {
+func ExampleAll_multipleErrors() {
 	result = async.All(
 		func() error {
 			return fmt.Errorf("SPLASH")
