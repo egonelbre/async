@@ -40,10 +40,10 @@ func All(fns ...func() error) Result {
 }
 
 // Spawns N routines, after each completes runs all whendone functions
-func Spawn(N int32, fn func(id int), whendone ...func()) {
+func Spawn(N int32, fn func(id int32), whendone ...func()) {
 	waiting := N
 	for k := int32(0); k < N; k += 1 {
-		go func(k int) {
+		go func(k int32) {
 			fn(k)
 			if atomic.AddInt32(&waiting, -1) == 0 {
 				for _, fn := range whendone {
