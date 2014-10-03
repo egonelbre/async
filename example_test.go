@@ -28,7 +28,7 @@ func ExampleAll_success() {
 }
 
 func ExampleAll_failing() {
-	result = async.All(
+	result := async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
 			return nil
@@ -48,7 +48,7 @@ func ExampleAll_failing() {
 }
 
 func ExampleAll_multipleErrors() {
-	result = async.All(
+	result := async.All(
 		func() error {
 			return fmt.Errorf("SPLASH")
 		},
