@@ -100,8 +100,8 @@ func ExampleBlockIter() {
 	input := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	output := make([]int, len(input))
 	async.BlockIter(len(input), 2, func(start, limit int) {
-		for i := start; i < limit; i += 1 {
-			output[i] = input[i] * input[i]
+		for i, v := range input[start:limit] {
+			output[start+i] = v * v
 		}
 	})
 
