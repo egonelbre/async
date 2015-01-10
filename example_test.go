@@ -28,7 +28,7 @@ func ExampleAll_success() {
 }
 
 func ExampleAll_failing() {
-	result = async.All(
+	result := async.All(
 		func() error {
 			time.Sleep(100 * time.Millisecond)
 			return nil
@@ -48,7 +48,7 @@ func ExampleAll_failing() {
 }
 
 func ExampleAll_multipleErrors() {
-	result = async.All(
+	result := async.All(
 		func() error {
 			return fmt.Errorf("SPLASH")
 		},
@@ -81,5 +81,31 @@ func ExampleSpawn() {
 
 	for r := range done {
 		println(r)
+	}
+}
+
+func ExampleIter() {
+	input := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	output := make([]int, len(input))
+	async.Iter(len(input), 2, func(i int) {
+		output[i] = input[i] * input[i]
+	})
+
+	for i, v := range output {
+		println(i, input[i], v)
+	}
+}
+
+func ExampleBlockIter() {
+	input := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	output := make([]int, len(input))
+	async.BlockIter(len(input), 2, func(start, limit int) {
+		for i := start; i < limit; i += 1 {
+			output[i] = input[i] * input[i]
+		}
+	})
+
+	for i, v := range output {
+		println(i, input[i], v)
 	}
 }

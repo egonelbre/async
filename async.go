@@ -1,6 +1,9 @@
 package async
 
-import "sync/atomic"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 type Result struct {
 	Done  <-chan struct{}
@@ -43,8 +46,8 @@ func All(fns ...func() error) Result {
 func Spawn(N int32, fn func(id int), whendone ...func()) {
 	waiting := N
 	for k := int32(0); k < N; k += 1 {
-		go func(k int) {
-			fn(k)
+		go func(k int32) {
+			fn(int(k))
 			if atomic.AddInt32(&waiting, -1) == 0 {
 				for _, fn := range whendone {
 					fn()
@@ -52,4 +55,51 @@ func Spawn(N int32, fn func(id int), whendone ...func()) {
 			}
 		}(k)
 	}
+}
+
+// Spawns N routines, iterating over [0..Count) items in increasing order
+func Iter(Count int, N int, fn func(i int)) {
+	var wg sync.WaitGroup
+	wg.Add(N)
+	i := int64(0)
+	for k := 0; k < N; k += 1 {
+		go func() {
+			defer wg.Done()
+			for {
+				idx := int(atomic.AddInt64(&i, 1) - 1)
+				if idx >= Count {
+					break
+				}
+				fn(idx)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+// Spawns N routines, iterating over [0..Count] items by splitting
+// them into blocks [start..limit), note that item "limit" shouldn't be
+// processed.
+func BlockIter(Count int, N int, fn func(start, limit int)) {
+	var wg sync.WaitGroup
+
+	start, left := 0, Count
+	for k := 0; k < N; k += 1 {
+		count := (left + (N - k - 1)) / (N - k)
+		limit := start + count
+		if limit >= Count {
+			limit = Count
+		}
+		wg.Add(1)
+		go func(start, limit int) {
+			defer wg.Done()
+			fn(start, limit)
+		}(start, limit)
+		start = start + count
+		left -= count
+		if left <= 0 {
+			break
+		}
+	}
+	wg.Wait()
 }
