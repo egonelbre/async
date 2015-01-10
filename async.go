@@ -43,17 +43,17 @@ func All(fns ...func() error) Result {
 }
 
 // Spawns N routines, after each completes runs all whendone functions
-func Spawn(N int32, fn func(id int), whendone ...func()) {
-	waiting := N
-	for k := int32(0); k < N; k += 1 {
-		go func(k int32) {
-			fn(int(k))
+func Spawn(N int, fn func(id int), whendone ...func()) {
+	waiting := int32(N)
+	for k := 0; k < N; k += 1 {
+		go func(k int) {
+			fn(k)
 			if atomic.AddInt32(&waiting, -1) == 0 {
 				for _, fn := range whendone {
 					fn()
 				}
 			}
-		}(k)
+		}(int(k))
 	}
 }
 
