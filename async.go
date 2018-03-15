@@ -42,7 +42,7 @@ func All(fns ...func() error) Result {
 	return Result{done, errs}
 }
 
-// Spawns N routines, after each completes runs all whendone functions
+// Spawns N routines. After the last one completes, runs all whendone functions
 func Spawn(N int, fn func(id int), whendone ...func()) {
 	waiting := int32(N)
 	for k := 0; k < N; k += 1 {
