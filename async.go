@@ -42,7 +42,7 @@ func All(fns ...func() error) Result {
 	return Result{done, errs}
 }
 
-// Spawns N routines. After the last one completes, runs all whendone functions
+// Spawns N routines, after each completes runs all whendone functions
 func Spawn(N int, fn func(id int), whendone ...func()) {
 	waiting := int32(N)
 	for k := 0; k < N; k += 1 {
@@ -55,6 +55,19 @@ func Spawn(N int, fn func(id int), whendone ...func()) {
 			}
 		}(int(k))
 	}
+}
+
+// Run N routines and wait for all to complete
+func Run(N int, fn func(id int)) {
+	var wg sync.WaitGroup
+	wg.Add(N)
+	for k := 0; k < N; k += 1 {
+		go func(k int) {
+			fn(k)
+			wg.Done()
+		}(int(k))
+	}
+	wg.Wait()
 }
 
 // Spawns N routines, iterating over [0..Count) items in increasing order

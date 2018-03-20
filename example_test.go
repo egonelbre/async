@@ -2,6 +2,7 @@ package async_test
 
 import (
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/egonelbre/async"
@@ -80,8 +81,19 @@ func ExampleSpawn() {
 	close(work)
 
 	for r := range done {
-		println(r)
+		fmt.Println(r)
 	}
+}
+
+func ExampleRun() {
+	total := int64(0)
+
+	async.Run(8, func(id int) {
+		atomic.AddInt64(&total, int64(id))
+	})
+
+	fmt.Println(total)
+	// Output:28
 }
 
 func ExampleIter() {
@@ -92,7 +104,7 @@ func ExampleIter() {
 	})
 
 	for i, v := range output {
-		println(i, input[i], v)
+		fmt.Println(i, input[i], v)
 	}
 }
 
@@ -106,6 +118,6 @@ func ExampleBlockIter() {
 	})
 
 	for i, v := range output {
-		println(i, input[i], v)
+		fmt.Println(i, input[i], v)
 	}
 }
