@@ -1,6 +1,7 @@
 package async
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -10,7 +11,7 @@ type Result struct {
 	Error <-chan error
 }
 
-func (r *Result) Wait() []error {
+func (r Result) Wait() []error {
 	select {
 	case <-r.Done:
 		var errs []error
@@ -22,6 +23,14 @@ func (r *Result) Wait() []error {
 		}
 		return nil
 	}
+}
+
+func (r Result) WaitError() error {
+	errs := r.Wait()
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%v", errs)
 }
 
 // All starts all functions concurrently
@@ -49,6 +58,37 @@ func All(fns ...func() error) Result {
 	}
 
 	if len(fns) == 0 {
+		done <- struct{}{}
+		close(errs)
+		close(done)
+	}
+
+	return Result{done, errs}
+}
+
+// SpawnWithResult starts N functions concurrently
+func SpawnWithResult(N int, fn func(id int) error) Result {
+	done := make(chan struct{}, 1)
+	errs := make(chan error, N)
+
+	waiting := int32(N)
+
+	for id := 0; id < N; id++ {
+		go func(id int) {
+			defer func() {
+				if atomic.AddInt32(&waiting, -1) == 0 {
+					done <- struct{}{}
+					close(errs)
+					close(done)
+				}
+			}()
+			if err := fn(id); err != nil {
+				errs <- err
+			}
+		}(id)
+	}
+
+	if N == 0 {
 		done <- struct{}{}
 		close(errs)
 		close(done)
