@@ -10,6 +10,20 @@ type Result struct {
 	Error <-chan error
 }
 
+func (r *Result) Wait() []error {
+	select {
+	case <-r.Done:
+		var errs []error
+		for err := range r.Error {
+			errs = append(errs, err)
+		}
+		if len(errs) > 0 {
+			return errs
+		}
+		return nil
+	}
+}
+
 // All starts all functions concurrently
 // if any error occurs it will be sent to the Error channel
 // after all functions have terminated the Done channel will get a single value
