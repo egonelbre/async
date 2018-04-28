@@ -35,14 +35,15 @@ func All(fns ...func() error) Result {
 
 	for _, fn := range fns {
 		go func(fn func() error) {
+			defer func() {
+				if atomic.AddInt32(&waiting, -1) == 0 {
+					done <- struct{}{}
+					close(errs)
+					close(done)
+				}
+			}()
 			if err := fn(); err != nil {
 				errs <- err
-			}
-
-			if atomic.AddInt32(&waiting, -1) == 0 {
-				done <- struct{}{}
-				close(errs)
-				close(done)
 			}
 		}(fn)
 	}
@@ -61,12 +62,15 @@ func Spawn(N int, fn func(id int), whendone ...func()) {
 	waiting := int32(N)
 	for k := 0; k < N; k += 1 {
 		go func(k int) {
-			fn(k)
-			if atomic.AddInt32(&waiting, -1) == 0 {
-				for _, fn := range whendone {
-					fn()
+			defer func() {
+				if atomic.AddInt32(&waiting, -1) == 0 {
+					for _, fn := range whendone {
+						fn()
+					}
 				}
-			}
+			}()
+
+			fn(k)
 		}(int(k))
 	}
 }
@@ -77,8 +81,8 @@ func Run(N int, fn func(id int)) {
 	wg.Add(N)
 	for k := 0; k < N; k += 1 {
 		go func(k int) {
+			defer wg.Done()
 			fn(k)
-			wg.Done()
 		}(int(k))
 	}
 	wg.Wait()
